@@ -61,12 +61,22 @@
                 updateStatus("Verificando Node.js no sistema...");
                 var nodeCheck = shell.Run("cmd /c node -v", 0, true);
                 if (nodeCheck !== 0) {
-                    shell.Popup("O Node.js não foi encontrado no seu computador.\n\nPor favor, acesse https://nodejs.org, baixe e instale a versão recomendada (LTS) e depois abra este instalador novamente.", 0, "Atenção: Node.js Faltando", 48);
-                    updateStatus("<span style='color:red'>Instalação abortada: Node.js não encontrado.</span>");
-                    resetButton();
-                    return;
+                    updateStatus("<span style='color:#eab308'>Node.js não encontrado. Baixando e instalando automaticamente (isso pode demorar alguns minutos)...</span>");
+                    
+                    var psScript = "Invoke-WebRequest -Uri 'https://nodejs.org/dist/v20.14.0/node-v20.14.0-x64.msi' -OutFile 'node_installer.msi'; Start-Process msiexec.exe -ArgumentList '/i node_installer.msi /quiet /norestart' -Wait; Remove-Item 'node_installer.msi' -ErrorAction SilentlyContinue";
+                    var installCmd = "powershell -WindowStyle Hidden -Command \"" + psScript + "\"";
+                    var installRes = shell.Run(installCmd, 0, true);
+                    
+                    if (installRes === 0) {
+                        updateStatus("<span style='color:green'>Node.js instalado com sucesso!</span>");
+                    } else {
+                        updateStatus("<span style='color:red'>Falha ao instalar o Node.js. Verifique sua internet ou instale manualmente.</span>");
+                        resetButton();
+                        return;
+                    }
+                } else {
+                    updateStatus("<span style='color:green'>Node.js verificado.</span>");
                 }
-                updateStatus("<span style='color:green'>Node.js verificado.</span>");
                 setTimeout(stepInstallNpm, 50);
             } catch (e) { handleError(e); }
         }
@@ -76,6 +86,10 @@
                 updateStatus("Baixando bibliotecas necessárias (Isso pode levar alguns minutos)...");
                 setTimeout(function() {
                     var npmCheck = shell.Run("cmd /c npm install", 0, true);
+                    if (npmCheck !== 0) {
+                        npmCheck = shell.Run("cmd /c \"C:\\Program Files\\nodejs\\npm.cmd\" install", 0, true);
+                    }
+
                     if (npmCheck !== 0) {
                         updateStatus("<span style='color:#eab308'>Aviso: As bibliotecas foram processadas com alguns alertas.</span>");
                     } else {
@@ -98,8 +112,12 @@
 
                 updateStatus("Sincronizando tabelas do sistema...");
                 setTimeout(function() {
-                    shell.Run("cmd /c npx prisma db push", 0, true);
-                    shell.Run("cmd /c npx prisma generate", 0, true);
+                    var npxPush = shell.Run("cmd /c npx prisma db push", 0, true);
+                    if (npxPush !== 0) shell.Run("cmd /c \"C:\\Program Files\\nodejs\\npx.cmd\" prisma db push", 0, true);
+                    
+                    var npxGen = shell.Run("cmd /c npx prisma generate", 0, true);
+                    if (npxGen !== 0) shell.Run("cmd /c \"C:\\Program Files\\nodejs\\npx.cmd\" prisma generate", 0, true);
+
                     updateStatus("<span style='color:green'>Banco de dados pronto para uso.</span>");
                     setTimeout(stepShortcut, 50);
                 }, 50);
