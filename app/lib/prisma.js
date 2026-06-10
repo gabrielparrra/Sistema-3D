@@ -1,11 +1,12 @@
 import { PrismaClient } from '@prisma/client'
-import { createClient } from '@libsql/client'
+import { createClient } from '@libsql/client/web'
 import { PrismaLibSql } from '@prisma/adapter-libsql'
 
 const prismaClientSingleton = () => {
   const url = process.env.DATABASE_URL;
+  const isBuild = process.env.npm_lifecycle_event === 'build' || process.env.NEXT_PHASE === 'phase-production-build';
   
-  if (url && (url.startsWith('libsql://') || url.startsWith('https://'))) {
+  if (!isBuild && url && (url.startsWith('libsql://') || url.startsWith('https://'))) {
     const libsql = createClient({
       url: url,
       authToken: process.env.TURSO_AUTH_TOKEN,

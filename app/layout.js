@@ -10,6 +10,8 @@ export const metadata = {
   description: "Sistema para gerenciamento de vendas e estoque de impressão 3D.",
 };
 
+export const dynamic = 'force-dynamic';
+
 export default function RootLayout({ children }) {
   return (
     <html lang="pt-BR" className={`${dmSans.variable} ${jetbrainsMono.variable}`}>
