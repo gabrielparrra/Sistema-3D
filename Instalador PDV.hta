@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
+    <meta charset="UTF-8">
     <title>Instalador - Sistema PDV 3D</title>
     <meta http-equiv="x-ua-compatible" content="ie=11">
     <HTA:APPLICATION 
@@ -114,6 +115,7 @@
                     link.TargetPath = currentDir + "\\Abrir PDV.vbs";
                     link.WorkingDirectory = currentDir;
                     link.Description = "Atalho para o Sistema PDV";
+                    link.IconLocation = currentDir + "\\icone.ico";
                     link.Save();
                     updateStatus("<span style='color:green'>Atalho criado.</span>");
                 }
