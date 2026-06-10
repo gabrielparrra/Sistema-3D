@@ -1,5 +1,5 @@
 import { PrismaClient } from '@prisma/client'
-import { createClient } from '@libsql/client'
+import { createClient } from '@libsql/client/web'
 import { PrismaLibSQL } from '@prisma/adapter-libsql'
 
 const prismaClientSingleton = () => {
