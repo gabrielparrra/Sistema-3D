@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { clearSalesHistory, bulkAdjustPrices, bulkAdjustStock, bulkTransferCategory, bulkRegenerateCodes } from "@/app/actions/tools";
-import { AlertTriangle, Percent, PackageOpen, Download, FolderGit2, Hash, HardDriveUpload, HardDriveDownload } from "lucide-react";
+import { clearSalesHistory, bulkAdjustPrices, bulkAdjustStock, bulkTransferCategory, bulkRegenerateCodes, killSystemProcesses } from "@/app/actions/tools";
+import { AlertTriangle, Percent, PackageOpen, Download, FolderGit2, Hash, HardDriveUpload, HardDriveDownload, Power } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 export default function ToolsDashboard({ categories }) {
@@ -27,6 +27,8 @@ export default function ToolsDashboard({ categories }) {
 
   const [backupLoading, setBackupLoading] = useState(false);
 
+  const [killLoading, setKillLoading] = useState(false);
+
   const handleClearSales = async () => {
     const confirmText = prompt('Esta ação apagará TODAS AS VENDAS permanentemente. Digite "LIMPAR" para confirmar:');
     if (confirmText !== "LIMPAR") return;
@@ -40,6 +42,21 @@ export default function ToolsDashboard({ categories }) {
     } else {
       alert("Histórico de vendas limpo com sucesso!");
       router.refresh();
+    }
+  };
+
+  const handleKillSystem = async () => {
+    if (!confirm("AVISO: Isso irá desligar o motor do sistema em segundo plano. O PDV ficará offline e a pasta será liberada. Deseja desligar o sistema agora?")) return;
+    
+    setKillLoading(true);
+    const res = await killSystemProcesses();
+    
+    if (res?.error) {
+      alert(res.error);
+      setKillLoading(false);
+    } else {
+      alert("O sistema foi desligado com sucesso. Você já pode fechar o navegador e gerenciar seus arquivos!");
+      window.location.href = "about:blank";
     }
   };
 
@@ -328,6 +345,25 @@ export default function ToolsDashboard({ categories }) {
           style={{ marginTop: 'auto' }}
         >
           {clearLoading ? 'Limpando...' : 'Limpar Todas as Vendas'}
+        </button>
+      </div>
+
+      {/* Tool: Kill System */}
+      <div className="glass-card" style={{ display: 'flex', flexDirection: 'column', gap: '16px', borderTop: '4px solid #1e293b' }}>
+        <div className="flex items-center gap-3" style={{ color: '#334155' }}>
+          <Power size={28} />
+          <h2 className="text-xl" style={{ fontWeight: 700 }}>Desligar Sistema</h2>
+        </div>
+        <p className="text-muted text-sm" style={{ flex: 1 }}>
+          Encerra totalmente o processo do sistema que roda em segundo plano. Use isso quando quiser fazer manutenções, mover ou deletar a pasta do sistema.
+        </p>
+        <button 
+          onClick={handleKillSystem}
+          className="btn" 
+          disabled={killLoading}
+          style={{ marginTop: 'auto', background: '#1e293b', color: 'white' }}
+        >
+          {killLoading ? 'Desligando...' : 'Encerrar Processos (Desligar)'}
         </button>
       </div>
 

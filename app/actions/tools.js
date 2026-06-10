@@ -123,3 +123,17 @@ export async function bulkRegenerateCodes(categoryId) {
     return { error: "Erro ao regenerar códigos." };
   }
 }
+
+export async function killSystemProcesses() {
+  try {
+    // Schedule the exit so the response can be sent first
+    setTimeout(() => {
+      process.exit(0);
+    }, 1500);
+    
+    return { success: true };
+  } catch (e) {
+    return { error: "Erro ao encerrar o sistema." };
+  }
+}
+
