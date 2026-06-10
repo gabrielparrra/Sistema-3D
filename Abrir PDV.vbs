@@ -1,7 +1,7 @@
  Set WshShell = CreateObject("WScript.Shell")
 
 ' Executa o servidor do Next.js de forma TOTALMENTE INVISIVEL (0 = Oculto)
-WshShell.Run "cmd /c ""npm run dev""", 0, false
+WshShell.Run "cmd /c ""if exist .\node\npm.cmd (.\node\npm.cmd run dev) else (npm run dev)""", 0, false
 
 ' Espera 4 segundos para os motores ligarem (2000 milissegundos)
 WScript.Sleep 2000

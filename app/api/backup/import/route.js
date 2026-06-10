@@ -6,6 +6,11 @@ import prisma from '@/app/lib/prisma';
 
 export async function POST(request) {
   try {
+    // Se o banco for remoto (Turso), a importação de arquivo local não funciona
+    if (process.env.DATABASE_URL && process.env.DATABASE_URL.startsWith('libsql://')) {
+      return NextResponse.json({ error: "Importação não suportada em banco de dados na nuvem." }, { status: 400 });
+    }
+
     const formData = await request.formData();
     const file = formData.get('file');
 

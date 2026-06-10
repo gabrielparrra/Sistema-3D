@@ -1,9 +1,18 @@
-import AdmZip from 'adm-zip';
+import JSZip from 'jszip';
 import fs from 'fs';
 import path from 'path';
+import AdmZip from 'adm-zip';
 
 export async function GET() {
   try {
+    // Se o banco for remoto (Turso), o backup em arquivo não funciona
+    if (process.env.DATABASE_URL && process.env.DATABASE_URL.startsWith('libsql://')) {
+      return new Response(JSON.stringify({ error: "Backup não suportado em banco de dados na nuvem." }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+
     const zip = new AdmZip();
 
     // 1. Add Database file

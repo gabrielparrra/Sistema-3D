@@ -56,21 +56,28 @@
             try {
                 shell = new ActiveXObject("WScript.Shell");
                 fso = new ActiveXObject("Scripting.FileSystemObject");
-                currentDir = fso.GetAbsolutePathName(".");
+                
+                // Pega o diretório onde o HTA está sendo executado
+                var scriptPath = window.location.pathname;
+                if (scriptPath.charAt(0) == '/') scriptPath = scriptPath.slice(1);
+                currentDir = fso.GetParentFolderName(unescape(scriptPath));
+                shell.CurrentDirectory = currentDir;
 
                 updateStatus("Verificando Node.js no sistema...");
                 var nodeCheck = shell.Run("cmd /c node -v", 0, true);
+                if (nodeCheck !== 0) nodeCheck = shell.Run("cmd /c \"\"" + currentDir + "\\node\\node.exe\" -v\"", 0, true);
+
                 if (nodeCheck !== 0) {
-                    updateStatus("<span style='color:#eab308'>Node.js não encontrado. Baixando e instalando automaticamente (isso pode demorar alguns minutos)...</span>");
+                    updateStatus("<span style='color:#eab308'>Node.js não encontrado. Baixando e instalando portátil (isso pode demorar alguns minutos)...</span>");
                     
-                    var psScript = "Invoke-WebRequest -Uri 'https://nodejs.org/dist/v20.14.0/node-v20.14.0-x64.msi' -OutFile 'node_installer.msi'; Start-Process msiexec.exe -ArgumentList '/i node_installer.msi /quiet /norestart' -Wait; Remove-Item 'node_installer.msi' -ErrorAction SilentlyContinue";
+                    var psScript = "$ProgressPreference = 'SilentlyContinue'; Invoke-WebRequest -Uri 'https://nodejs.org/dist/v20.14.0/node-v20.14.0-win-x64.zip' -OutFile 'node.zip'; tar -xf node.zip; if (Test-Path 'node') { Remove-Item -Path 'node' -Recurse -Force }; Rename-Item -Path 'node-v20.14.0-win-x64' -NewName 'node'; Remove-Item 'node.zip' -Force";
                     var installCmd = "powershell -WindowStyle Hidden -Command \"" + psScript + "\"";
                     var installRes = shell.Run(installCmd, 0, true);
                     
                     if (installRes === 0) {
                         updateStatus("<span style='color:green'>Node.js instalado com sucesso!</span>");
                     } else {
-                        updateStatus("<span style='color:red'>Falha ao instalar o Node.js. Verifique sua internet ou instale manualmente.</span>");
+                        updateStatus("<span style='color:red'>Falha ao instalar o Node.js. Verifique sua internet.</span>");
                         resetButton();
                         return;
                     }
@@ -86,9 +93,8 @@
                 updateStatus("Baixando bibliotecas necessárias (Isso pode levar alguns minutos)...");
                 setTimeout(function() {
                     var npmCheck = shell.Run("cmd /c npm install", 0, true);
-                    if (npmCheck !== 0) {
-                        npmCheck = shell.Run("cmd /c \"C:\\Program Files\\nodejs\\npm.cmd\" install", 0, true);
-                    }
+                    if (npmCheck !== 0) npmCheck = shell.Run("cmd /c \"C:\\Program Files\\nodejs\\npm.cmd\" install", 0, true);
+                    if (npmCheck !== 0) npmCheck = shell.Run("cmd /c \"\"" + currentDir + "\\node\\npm.cmd\" install\"", 0, true);
 
                     if (npmCheck !== 0) {
                         updateStatus("<span style='color:#eab308'>Aviso: As bibliotecas foram processadas com alguns alertas.</span>");
@@ -113,10 +119,12 @@
                 updateStatus("Sincronizando tabelas do sistema...");
                 setTimeout(function() {
                     var npxPush = shell.Run("cmd /c npx prisma db push", 0, true);
-                    if (npxPush !== 0) shell.Run("cmd /c \"C:\\Program Files\\nodejs\\npx.cmd\" prisma db push", 0, true);
+                    if (npxPush !== 0) npxPush = shell.Run("cmd /c \"C:\\Program Files\\nodejs\\npx.cmd\" prisma db push", 0, true);
+                    if (npxPush !== 0) npxPush = shell.Run("cmd /c \"\"" + currentDir + "\\node\\npx.cmd\" prisma db push\"", 0, true);
                     
                     var npxGen = shell.Run("cmd /c npx prisma generate", 0, true);
-                    if (npxGen !== 0) shell.Run("cmd /c \"C:\\Program Files\\nodejs\\npx.cmd\" prisma generate", 0, true);
+                    if (npxGen !== 0) npxGen = shell.Run("cmd /c \"C:\\Program Files\\nodejs\\npx.cmd\" prisma generate", 0, true);
+                    if (npxGen !== 0) npxGen = shell.Run("cmd /c \"\"" + currentDir + "\\node\\npx.cmd\" prisma generate\"", 0, true);
 
                     updateStatus("<span style='color:green'>Banco de dados pronto para uso.</span>");
                     setTimeout(stepShortcut, 50);
