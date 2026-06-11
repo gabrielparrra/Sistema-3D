@@ -19,7 +19,7 @@ export async function POST(request) {
     const zip = new AdmZip(buffer);
     const zipEntries = zip.getEntries();
 
-    const uploadsPath = path.join(process.cwd(), 'public', 'uploads');
+    const uploadsPath = path.join(process.cwd(), 'uploads');
     if (!fs.existsSync(uploadsPath)) {
       fs.mkdirSync(uploadsPath, { recursive: true });
     }

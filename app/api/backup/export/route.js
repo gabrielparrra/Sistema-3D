@@ -13,7 +13,7 @@ export async function GET() {
     }
 
     // Add Uploads folder (images)
-    const uploadsPath = path.join(process.cwd(), 'public', 'uploads');
+    const uploadsPath = path.join(process.cwd(), 'uploads');
     if (fs.existsSync(uploadsPath)) {
       zip.addLocalFolder(uploadsPath, 'uploads');
     }

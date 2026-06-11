@@ -24,12 +24,14 @@ export async function createProduct(formData) {
     // Create unique filename
     const ext = path.extname(imageFile.name) || '';
     const uniqueName = `${Date.now()}-${Math.round(Math.random() * 1e9)}${ext}`;
-    const filePath = path.join(process.cwd(), "public", "uploads", uniqueName);
+    // Salva na pasta raiz 'uploads' ao invés de 'public/uploads' para não depender do cache do Next.js
+    const filePath = path.join(process.cwd(), "uploads", uniqueName);
     
     // Ensure dir exists
     await fs.mkdir(path.dirname(filePath), { recursive: true }).catch(() => {});
     await fs.writeFile(filePath, buffer);
-    imageUrl = `/uploads/${uniqueName}`;
+    // URL aponta para a nova API de imagens
+    imageUrl = `/api/uploads/${uniqueName}`;
   }
 
   if (!name || isNaN(price) || !categoryId) return { error: "Preencha os campos obrigatórios." };
@@ -82,11 +84,11 @@ export async function updateProduct(id, formData) {
     
     const ext = path.extname(imageFile.name) || '';
     const uniqueName = `${Date.now()}-${Math.round(Math.random() * 1e9)}${ext}`;
-    const filePath = path.join(process.cwd(), "public", "uploads", uniqueName);
+    const filePath = path.join(process.cwd(), "uploads", uniqueName);
     
     await fs.mkdir(path.dirname(filePath), { recursive: true }).catch(() => {});
     await fs.writeFile(filePath, buffer);
-    imageUrl = `/uploads/${uniqueName}`;
+    imageUrl = `/api/uploads/${uniqueName}`;
   }
 
   if (!name || isNaN(price) || !categoryId) return { error: "Preencha os campos obrigatórios." };
