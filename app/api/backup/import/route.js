@@ -2,15 +2,9 @@ import { NextResponse } from 'next/server';
 import AdmZip from 'adm-zip';
 import fs from 'fs';
 import path from 'path';
-import prisma from '@/app/lib/prisma';
 
 export async function POST(request) {
   try {
-    // Se o banco for remoto (Turso), a importação de arquivo local não funciona
-    if (process.env.DATABASE_URL && process.env.DATABASE_URL.startsWith('libsql://')) {
-      return NextResponse.json({ error: "Importação não suportada em banco de dados na nuvem." }, { status: 400 });
-    }
-
     const formData = await request.formData();
     const file = formData.get('file');
 
@@ -25,24 +19,17 @@ export async function POST(request) {
     const zip = new AdmZip(buffer);
     const zipEntries = zip.getEntries();
 
-    // Disconnect Prisma so SQLite releases the file lock
-    await prisma.$disconnect();
-
-    // Delay briefly to ensure lock is released by the OS
-    await new Promise(resolve => setTimeout(resolve, 500));
-
-    let dbRestored = false;
     const uploadsPath = path.join(process.cwd(), 'public', 'uploads');
-
-    // Create uploads folder if not exists
     if (!fs.existsSync(uploadsPath)) {
       fs.mkdirSync(uploadsPath, { recursive: true });
     }
 
+    let dbRestored = false;
+
     zipEntries.forEach(entry => {
-      // Restore Database
-      if (entry.entryName === 'prisma/dev.db' || entry.entryName === 'dev.db') {
-        const dbPath = path.join(process.cwd(), 'prisma', 'dev.db');
+      // Restore dev.db
+      if (entry.entryName === 'database' || entry.entryName === 'dev.db') {
+        const dbPath = path.join(process.cwd(), 'dev.db');
         fs.writeFileSync(dbPath, entry.getData());
         dbRestored = true;
       }
@@ -56,13 +43,13 @@ export async function POST(request) {
     });
 
     if (!dbRestored) {
-      return NextResponse.json({ error: "O arquivo enviado não contém um banco de dados válido (dev.db)." }, { status: 400 });
+      return NextResponse.json({ error: "O arquivo enviado não contém um backup válido." }, { status: 400 });
     }
 
-    return NextResponse.json({ success: true, message: "Backup restaurado com sucesso. Reinicie o sistema se necessário." });
+    return NextResponse.json({ success: true, message: "Backup restaurado com sucesso. Reinicie o servidor se necessário." });
 
   } catch (error) {
     console.error("Backup import error:", error);
-    return NextResponse.json({ error: "Erro ao restaurar backup. O arquivo pode estar corrompido ou bloqueado." }, { status: 500 });
+    return NextResponse.json({ error: "Erro ao restaurar backup. O arquivo pode estar corrompido." }, { status: 500 });
   }
 }

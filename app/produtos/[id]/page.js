@@ -1,4 +1,4 @@
-import prisma from "@/app/lib/prisma";
+import { prisma } from "@/app/lib/prisma";
 import { updateProduct, deleteProduct } from "@/app/actions/products";
 import Image from "next/image";
 import Link from "next/link";
@@ -7,11 +7,11 @@ import DeleteButton from "@/app/components/DeleteButton";
 import { redirect } from "next/navigation";
 
 export default async function ProductDetailPage({ params }) {
+  // Fix Next.js 15+ async params
   const { id } = await params;
   
   const product = await prisma.product.findUnique({
-    where: { id },
-    include: { category: true }
+    where: { id }
   });
 
   if (!product) {

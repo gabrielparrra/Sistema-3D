@@ -1,4 +1,4 @@
-import prisma from "@/app/lib/prisma";
+import { prisma } from "@/app/lib/prisma";
 import Link from "next/link";
 import { ArrowLeft, Download } from "lucide-react";
 import { redirect } from "next/navigation";

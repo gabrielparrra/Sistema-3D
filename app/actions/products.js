@@ -1,6 +1,6 @@
 "use server";
 
-import prisma from "@/app/lib/prisma";
+import { prisma } from "@/app/lib/prisma";
 import { revalidatePath } from "next/cache";
 import fs from "fs/promises";
 import path from "path";
@@ -26,25 +26,38 @@ export async function createProduct(formData) {
     const uniqueName = `${Date.now()}-${Math.round(Math.random() * 1e9)}${ext}`;
     const filePath = path.join(process.cwd(), "public", "uploads", uniqueName);
     
+    // Ensure dir exists
+    await fs.mkdir(path.dirname(filePath), { recursive: true }).catch(() => {});
     await fs.writeFile(filePath, buffer);
     imageUrl = `/uploads/${uniqueName}`;
   }
 
   if (!name || isNaN(price) || !categoryId) return { error: "Preencha os campos obrigatórios." };
 
+  // Fetch category to generate code
   const category = await prisma.category.findUnique({
-    where: { id: categoryId },
-    select: { prefix: true, _count: { select: { products: true } } }
+    where: { id: categoryId }
   });
-
   let code = null;
+  
   if (category && category.prefix) {
-    const count = category._count.products;
+    const count = await prisma.product.count({
+      where: { categoryId }
+    });
     code = `${category.prefix}-${String(count + 1).padStart(3, '0')}`;
   }
 
   await prisma.product.create({
-    data: { name, description, price, cost, categoryId, imageUrl, stock, code }
+    data: {
+      name, 
+      description, 
+      price, 
+      cost, 
+      categoryId, 
+      imageUrl, 
+      stock, 
+      code
+    }
   });
   
   revalidatePath("/produtos");
@@ -71,6 +84,7 @@ export async function updateProduct(id, formData) {
     const uniqueName = `${Date.now()}-${Math.round(Math.random() * 1e9)}${ext}`;
     const filePath = path.join(process.cwd(), "public", "uploads", uniqueName);
     
+    await fs.mkdir(path.dirname(filePath), { recursive: true }).catch(() => {});
     await fs.writeFile(filePath, buffer);
     imageUrl = `/uploads/${uniqueName}`;
   }
@@ -94,10 +108,19 @@ export async function updateProduct(id, formData) {
 
 export async function deleteProduct(id) {
   try {
+    const salesCount = await prisma.saleItem.count({
+      where: { productId: id }
+    });
+    
+    if (salesCount > 0) {
+       return { error: "Não é possível excluir produto vinculado a uma venda." };
+    }
+    
     await prisma.product.delete({ where: { id } });
+    
     revalidatePath("/produtos");
     revalidatePath("/vendas");
   } catch (e) {
-    return { error: "Não é possível excluir produto vinculado a uma venda." };
+    return { error: "Erro ao excluir produto." };
   }
 }

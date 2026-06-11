@@ -1,6 +1,6 @@
 "use server";
 
-import prisma from "@/app/lib/prisma";
+import { prisma } from "@/app/lib/prisma";
 import { revalidatePath } from "next/cache";
 
 export async function createEvent(formData) {
@@ -16,7 +16,10 @@ export async function createEvent(formData) {
   }
 
   await prisma.event.create({
-    data: { name, isActive: true }
+    data: {
+      name, 
+      isActive: true
+    }
   });
 
   revalidatePath("/relatorios");
@@ -27,7 +30,10 @@ export async function createEvent(formData) {
 export async function closeEvent(id) {
   await prisma.event.update({
     where: { id },
-    data: { isActive: false, closedAt: new Date() }
+    data: { 
+      isActive: false, 
+      closedAt: new Date() 
+    }
   });
 
   revalidatePath("/relatorios");
@@ -36,7 +42,8 @@ export async function closeEvent(id) {
 }
 
 export async function getActiveEvent() {
-  return await prisma.event.findFirst({
+  const activeEvent = await prisma.event.findFirst({
     where: { isActive: true }
   });
+  return activeEvent;
 }

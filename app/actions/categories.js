@@ -1,6 +1,6 @@
 "use server";
 
-import prisma from "@/app/lib/prisma";
+import { prisma } from "@/app/lib/prisma";
 import { revalidatePath } from "next/cache";
 
 export async function createCategory(formData) {
@@ -14,15 +14,26 @@ export async function createCategory(formData) {
     if (prefix.length < 3) prefix = prefix.padEnd(3, 'X');
   }
 
-  await prisma.category.create({ data: { name, prefix } });
+  await prisma.category.create({
+    data: { name, prefix }
+  });
+  
   revalidatePath("/categorias");
 }
 
 export async function deleteCategory(id) {
   try {
+    const productsCount = await prisma.product.count({
+      where: { categoryId: id }
+    });
+    
+    if (productsCount > 0) {
+      return { error: "Não é possível excluir uma categoria que possui produtos." };
+    }
+    
     await prisma.category.delete({ where: { id } });
     revalidatePath("/categorias");
   } catch (e) {
-    return { error: "Não é possível excluir uma categoria que possui produtos." };
+    return { error: "Erro ao excluir categoria." };
   }
 }

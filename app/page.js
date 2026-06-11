@@ -1,18 +1,16 @@
 import { Box, ShoppingCart, DollarSign, TrendingUp } from "lucide-react";
-import prisma from "./lib/prisma";
+import { prisma } from "./lib/prisma";
 
 export default async function Dashboard() {
-  // Busca o resumo das vendas e produtos
-  const [sales, productsCount, categoriesCount, lowStockProducts] = await Promise.all([
-    prisma.sale.findMany(),
-    prisma.product.count(),
-    prisma.category.count(),
-    prisma.product.findMany({
-      where: { stock: { lte: 2 } },
-      orderBy: { stock: 'asc' },
-      include: { category: true }
-    })
-  ]);
+  const sales = await prisma.sale.findMany();
+  
+  const productsCount = await prisma.product.count();
+  
+  const lowStockProducts = await prisma.product.findMany({
+    where: { stock: { lte: 2 } },
+    orderBy: { stock: 'asc' },
+    include: { category: true }
+  });
 
   const totalRevenue = sales.reduce((acc, sale) => acc + sale.finalAmount, 0);
   const totalSales = sales.length;

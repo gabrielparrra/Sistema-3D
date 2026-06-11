@@ -1,4 +1,4 @@
-import prisma from "@/app/lib/prisma";
+import { prisma } from "@/app/lib/prisma";
 import ToolsDashboard from "./ToolsDashboard";
 
 export default async function FerramentasPage() {

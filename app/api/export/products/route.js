@@ -1,11 +1,11 @@
-import prisma from "@/app/lib/prisma";
+import { prisma } from "@/app/lib/prisma";
 import * as xlsx from "xlsx";
 
 export async function GET() {
   try {
     const products = await prisma.product.findMany({
-      include: { category: true },
-      orderBy: { name: 'asc' }
+      orderBy: { name: 'asc' },
+      include: { category: true }
     });
 
     const data = products.map(p => ({

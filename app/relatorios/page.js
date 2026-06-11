@@ -1,4 +1,4 @@
-import prisma from "@/app/lib/prisma";
+import { prisma } from "@/app/lib/prisma";
 import { createEvent, closeEvent } from "@/app/actions/events";
 import { Plus, CheckCircle, BarChart2, Calendar } from "lucide-react";
 import Link from "next/link";

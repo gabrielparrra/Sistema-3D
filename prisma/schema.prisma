@@ -1,6 +1,5 @@
 generator client {
-  provider        = "prisma-client-js"
-  previewFeatures = ["driverAdapters"]
+  provider = "prisma-client-js"
 }
 
 datasource db {
@@ -12,37 +11,23 @@ model Category {
   id        String    @id @default(cuid())
   name      String
   prefix    String?
-  products  Product[]
   createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
+  products  Product[]
 }
 
 model Product {
-  id          String     @id @default(cuid())
+  id          String      @id @default(cuid())
+  code        String?
   name        String
-  code        String?    @unique
   description String?
-  price       Float      // preço de venda
-  cost        Float?     // custo de impressão (opcional)
-  imageUrl    String?    // caminho da imagem do produto
-  stock       Int        @default(0)
+  price       Float
+  cost        Float?
+  stock       Int         @default(0)
+  imageUrl    String?
   categoryId  String
-  category    Category   @relation(fields: [categoryId], references: [id])
+  category    Category    @relation(fields: [categoryId], references: [id])
+  createdAt   DateTime    @default(now())
   saleItems   SaleItem[]
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @updatedAt
-}
-
-model Sale {
-  id            String     @id @default(cuid())
-  totalAmount   Float
-  discount      Float      @default(0)
-  finalAmount   Float
-  paymentMethod String?
-  items         SaleItem[]
-  createdAt     DateTime   @default(now())
-  eventId       String?
-  event         Event?     @relation(fields: [eventId], references: [id])
 }
 
 model Event {
@@ -54,13 +39,25 @@ model Event {
   sales     Sale[]
 }
 
+model Sale {
+  id            String      @id @default(cuid())
+  eventId       String
+  event         Event       @relation(fields: [eventId], references: [id])
+  totalAmount   Float
+  discount      Float       @default(0)
+  finalAmount   Float
+  paymentMethod String
+  createdAt     DateTime    @default(now())
+  items         SaleItem[]
+}
+
 model SaleItem {
   id        String   @id @default(cuid())
   saleId    String
-  sale      Sale     @relation(fields: [saleId], references: [id], onDelete: Cascade)
+  sale      Sale     @relation(fields: [saleId], references: [id])
   productId String
   product   Product  @relation(fields: [productId], references: [id])
-  quantity  Int      @default(1)
-  price     Float    // preço no momento da venda
+  quantity  Int
+  price     Float
   createdAt DateTime @default(now())
 }

@@ -1,19 +1,16 @@
-import prisma from "@/app/lib/prisma";
+import { prisma } from "@/app/lib/prisma";
 import { createProduct, deleteProduct } from "../actions/products";
-import { Trash2, Image as ImageIcon, Edit } from "lucide-react";
-import Image from "next/image";
-import Link from "next/link";
 import ProductFormCard from "./ProductFormCard";
 import ProductTable from "./ProductTable";
 
 export default async function ProdutosPage() {
-  const products = await prisma.product.findMany({
-    include: { category: true },
-    orderBy: { name: 'asc' }
-  });
-  
   const categories = await prisma.category.findMany({
     orderBy: { name: 'asc' }
+  });
+
+  const products = await prisma.product.findMany({
+    orderBy: { name: 'asc' },
+    include: { category: true }
   });
 
   return (

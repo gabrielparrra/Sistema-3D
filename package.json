@@ -10,9 +10,7 @@
     "postinstall": "prisma generate"
   },
   "dependencies": {
-    "@libsql/client": "0.14.0",
-    "@prisma/adapter-libsql": "5.22.0",
-    "@prisma/client": "^5.22.0",
+    "@prisma/client": "^5.14.0",
     "adm-zip": "^0.5.17",
     "lucide-react": "^1.17.0",
     "next": "16.2.7",
@@ -24,7 +22,7 @@
     "@tailwindcss/postcss": "^4",
     "eslint": "^9",
     "eslint-config-next": "16.2.7",
-    "prisma": "^5.22.0",
+    "prisma": "^5.14.0",
     "tailwindcss": "^4"
   },
   "overrides": {

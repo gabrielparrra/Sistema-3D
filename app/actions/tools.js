@@ -1,16 +1,15 @@
 "use server";
 
-import prisma from "@/app/lib/prisma";
+import { prisma } from "@/app/lib/prisma";
 import { revalidatePath } from "next/cache";
 
 export async function clearSalesHistory() {
   try {
-    // Delete all sale items first (if cascade isn't configured, though Prisma usually handles it)
-    await prisma.saleItem.deleteMany({});
-    // Delete all sales
-    await prisma.sale.deleteMany({});
-    // Delete all events
-    await prisma.event.deleteMany({});
+    await prisma.$transaction([
+      prisma.saleItem.deleteMany({}),
+      prisma.sale.deleteMany({}),
+      prisma.event.deleteMany({})
+    ]);
     
     revalidatePath("/");
     revalidatePath("/vendas");
@@ -31,17 +30,18 @@ export async function bulkAdjustPrices(categoryId, percentage) {
 
     const multiplier = 1 + (p / 100);
 
-    const whereClause = categoryId === "ALL" ? {} : { categoryId };
+    const where = categoryId !== "ALL" ? { categoryId } : {};
 
-    const products = await prisma.product.findMany({ where: whereClause });
+    const products = await prisma.product.findMany({ where });
     
-    // We update one by one to use the multiplier effectively since SQLite might lack complex math updates via Prisma
-    for (const prod of products) {
-      await prisma.product.update({
-        where: { id: prod.id },
-        data: { price: parseFloat((prod.price * multiplier).toFixed(2)) }
-      });
-    }
+    await prisma.$transaction(
+      products.map(p => 
+        prisma.product.update({
+          where: { id: p.id },
+          data: { price: parseFloat((p.price * multiplier).toFixed(2)) }
+        })
+      )
+    );
 
     revalidatePath("/produtos");
     revalidatePath("/vendas");
@@ -57,10 +57,10 @@ export async function bulkAdjustStock(categoryId, newStockValue) {
     const val = parseInt(newStockValue, 10);
     if (isNaN(val) || val < 0) return { error: "Valor de estoque inválido." };
 
-    const whereClause = categoryId === "ALL" ? {} : { categoryId };
+    const where = categoryId !== "ALL" ? { categoryId } : {};
 
     await prisma.product.updateMany({
-      where: whereClause,
+      where,
       data: { stock: val }
     });
 
@@ -95,25 +95,27 @@ export async function bulkTransferCategory(fromCategoryId, toCategoryId) {
 
 export async function bulkRegenerateCodes(categoryId) {
   try {
-    const whereClause = categoryId === "ALL" ? {} : { categoryId };
-    
+    const where = categoryId !== "ALL" ? { categoryId } : {};
+
     const products = await prisma.product.findMany({
-      where: whereClause,
+      where,
       include: { category: true }
     });
-
-    for (let i = 0; i < products.length; i++) {
-      const p = products[i];
-      // Generate a code: Category Prefix (first 3 letters uppercase) + increment number
-      const prefix = p.category.name.substring(0, 3).toUpperCase().replace(/[^A-Z0-9]/g, 'X');
-      const number = String(i + 1).padStart(3, '0');
-      const newCode = `${prefix}-${number}`;
-
-      await prisma.product.update({
-        where: { id: p.id },
-        data: { code: newCode }
-      });
-    }
+    
+    let i = 0;
+    await prisma.$transaction(
+      products.map(p => {
+        let newCode = p.code;
+        if (p.category && p.category.prefix) {
+          newCode = `${p.category.prefix}-${String(i + 1).padStart(3, '0')}`;
+          i++;
+        }
+        return prisma.product.update({
+          where: { id: p.id },
+          data: { code: newCode }
+        });
+      })
+    );
 
     revalidatePath("/produtos");
     revalidatePath("/vendas");
@@ -126,14 +128,11 @@ export async function bulkRegenerateCodes(categoryId) {
 
 export async function killSystemProcesses() {
   try {
-    // Schedule the exit so the response can be sent first
     setTimeout(() => {
       process.exit(0);
     }, 1500);
-    
     return { success: true };
   } catch (e) {
     return { error: "Erro ao encerrar o sistema." };
   }
 }
-

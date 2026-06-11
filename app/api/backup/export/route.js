@@ -4,23 +4,15 @@ import AdmZip from 'adm-zip';
 
 export async function GET() {
   try {
-    // Se o banco for remoto (Turso), o backup em arquivo não funciona
-    if (process.env.DATABASE_URL && process.env.DATABASE_URL.startsWith('libsql://')) {
-      return new Response(JSON.stringify({ error: "Backup não suportado em banco de dados na nuvem." }), {
-        status: 400,
-        headers: { 'Content-Type': 'application/json' },
-      });
-    }
-
     const zip = new AdmZip();
 
-    // 1. Add Database file
-    const dbPath = path.join(process.cwd(), 'prisma', 'dev.db');
+    // Export local sqlite database
+    const dbPath = path.join(process.cwd(), 'dev.db');
     if (fs.existsSync(dbPath)) {
-      zip.addLocalFile(dbPath, 'prisma');
+      zip.addLocalFile(dbPath, 'database');
     }
 
-    // 2. Add Uploads folder (images)
+    // Add Uploads folder (images)
     const uploadsPath = path.join(process.cwd(), 'public', 'uploads');
     if (fs.existsSync(uploadsPath)) {
       zip.addLocalFolder(uploadsPath, 'uploads');

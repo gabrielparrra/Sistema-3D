@@ -1,4 +1,4 @@
-import prisma from "@/app/lib/prisma";
+import { prisma } from "@/app/lib/prisma";
 import * as xlsx from "xlsx";
 
 export async function GET(request, { params }) {
@@ -24,13 +24,16 @@ export async function GET(request, { params }) {
     const data = [];
     
     for (const sale of event.sales) {
-      const dateStr = new Date(sale.createdAt).toLocaleString('pt-BR');
+      const dateStr = sale.createdAt ? new Date(sale.createdAt).toLocaleString('pt-BR') : '';
+      
       for (const item of sale.items) {
+        const product = item.product;
+        
         data.push({
           'ID Venda': sale.id,
           'Data Hora': dateStr,
-          'Código Produto': item.product?.code || '',
-          'Nome Produto': item.product?.name || '',
+          'Código Produto': product?.code || '',
+          'Nome Produto': product?.name || '',
           'Quantidade': item.quantity,
           'Preço Unitário': item.price,
           'Total Item': item.quantity * item.price,

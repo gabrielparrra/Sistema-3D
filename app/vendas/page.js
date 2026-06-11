@@ -1,11 +1,11 @@
-import prisma from "@/app/lib/prisma";
+import { prisma } from "@/app/lib/prisma";
 import POS from "../components/POS";
 import Link from "next/link";
 
 export default async function VendasPage() {
   const products = await prisma.product.findMany({
-    include: { category: true },
-    orderBy: { name: 'asc' }
+    orderBy: { name: 'asc' },
+    include: { category: true }
   });
 
   const activeEvent = await prisma.event.findFirst({

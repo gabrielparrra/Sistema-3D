@@ -1,15 +1,13 @@
-import prisma from "@/app/lib/prisma";
+import { prisma } from "@/app/lib/prisma";
 
 export default async function HistoricoPage() {
   const sales = await prisma.sale.findMany({
+    orderBy: { createdAt: 'desc' },
     include: {
       items: {
-        include: {
-          product: true
-        }
+        include: { product: true }
       }
-    },
-    orderBy: { createdAt: 'desc' }
+    }
   });
 
   return (
@@ -46,14 +44,14 @@ export default async function HistoricoPage() {
                       <ul style={{ listStyleType: 'none', padding: 0, margin: 0 }}>
                         {sale.items.map(item => (
                           <li key={item.id} className="text-sm">
-                            {item.quantity}x {item.product.name} (R$ {item.price.toFixed(2)})
+                            {item.quantity}x {item.product?.name} (R$ {item.price?.toFixed(2)})
                           </li>
                         ))}
                       </ul>
                     </td>
-                    <td>R$ {sale.totalAmount.toFixed(2)}</td>
-                    <td className="text-danger">R$ {sale.discount.toFixed(2)}</td>
-                    <td className="text-success" style={{ fontWeight: 700 }}>R$ {sale.finalAmount.toFixed(2)}</td>
+                    <td>R$ {sale.totalAmount?.toFixed(2)}</td>
+                    <td className="text-danger">R$ {sale.discount?.toFixed(2)}</td>
+                    <td className="text-success" style={{ fontWeight: 700 }}>R$ {sale.finalAmount?.toFixed(2)}</td>
                   </tr>
                 ))}
               </tbody>

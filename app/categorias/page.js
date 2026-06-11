@@ -1,12 +1,16 @@
-import prisma from "@/app/lib/prisma";
+import { prisma } from "@/app/lib/prisma";
 import { createCategory, deleteCategory } from "../actions/categories";
 import { Trash2 } from "lucide-react";
 import DeleteButton from "../components/DeleteButton";
 
 export default async function CategoriasPage() {
   const categories = await prisma.category.findMany({
-    include: { _count: { select: { products: true } } },
-    orderBy: { name: 'asc' }
+    orderBy: { name: 'asc' },
+    include: {
+      _count: {
+        select: { products: true }
+      }
+    }
   });
 
   return (
